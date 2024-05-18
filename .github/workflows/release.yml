@@ -1,0 +1,66 @@
+name: 'create release'
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+*'
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      version: ${{ steps.vars.outputs.version }}
+      upload_url:  ${{ steps.create_release.outputs.upload_url }}
+
+    steps:
+      - name: Checkout...
+        uses: actions/checkout@v4
+
+      - name: Set version...
+        id: vars
+        run: |
+          RELEASE_TAG=${GITHUB_REF#refs/*/}
+          echo ::set-output name=tag::${RELEASE_TAG}
+          echo ::set-output name=version::${RELEASE_TAG:1}
+
+      - name: Create release...
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          release_name: ${{ steps.vars.outputs.tag }}
+          body: JJava ${{ steps.vars.outputs.tag }} release
+          draft: true
+          prerelease: false
+
+  build-and-upload:
+    needs: prepare-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout...
+        uses: actions/checkout@v4
+
+      - name: Set up JDK...
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and test...
+        run: mvn clean verify -U
+
+      - name: Upload Archive...
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.prepare-release.outputs.upload_url }}
+          asset_path: ./target/jjava-${{ needs.prepare-release.outputs.version }}.zip
+          asset_name: jjava-${{ needs.prepare-release.outputs.version }}.zip
+          asset_content_type: application/zip
