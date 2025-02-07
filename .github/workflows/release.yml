@@ -30,8 +30,8 @@ jobs:
       - name: Publish package to Homebrew
         uses: m-dzianishchyts/brewtap@v1
         with:
-          homebrew_owner: dflib
-          homebrew_tap: homebrew-tap
+          homebrew_owner: m-dzianishchyts
+          homebrew_tap: homebrew-jjava
           depends_on: |
             "expect" => :test
           target: jjava-${{ github.ref_name }}-kernelspec.zip

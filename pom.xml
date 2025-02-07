@@ -61,9 +61,9 @@
     <url>https://github.com/dflib/jjava</url>
 
     <scm>
-        <connection>scm:git:https://github.com/dflib/jjava</connection>
-        <developerConnection>scm:git:ssh://git@github.com/dflib/jjava</developerConnection>
-        <url>https://github.com/dflib/jjava</url>
+        <connection>scm:git:https://github.com/dzianishchyts/jjava</connection>
+        <developerConnection>scm:git:ssh://git@github.com/m-dzianishchyts/jjava</developerConnection>
+        <url>https://github.com/dzianishchyts/jjava</url>
         <tag>HEAD</tag>
     </scm>
 
