@@ -51,6 +51,7 @@ jobs:
             EOS
           test: |
             jupyter = Formula["jupyterlab"].opt_bin/"jupyter"
+            ENV["JUPYTER_PATH"] = share/"jupyter"
             assert_match " java ", shell_output("#{jupyter} kernelspec list")
 
             (testpath/"console.exp").write <<~EOS
