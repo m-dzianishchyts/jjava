@@ -227,6 +227,11 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <docker.tests.enabled>${docker.tests.enabled}</docker.tests.enabled>
+                    </systemPropertyVariables>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -308,6 +313,12 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>docker</id>
+            <properties>
+                <docker.tests.enabled>true</docker.tests.enabled>
+            </properties>
         </profile>
     </profiles>
 </project>

@@ -1,5 +1,6 @@
 package org.dflib.jjava.distro;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,7 @@ public abstract class ContainerizedKernelCase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerizedKernelCase.class);
 
-    protected static final GenericContainer<?> container;
+    protected static GenericContainer<?> container;
     protected static final String WORKING_DIRECTORY = "/test";
     protected static final String CONTAINER_KERNELSPEC = "/usr/share/jupyter/kernels/java";
     protected static final String CONTAINER_RESOURCES = WORKING_DIRECTORY + "/resources";
@@ -34,20 +35,15 @@ public abstract class ContainerizedKernelCase {
     private static final String FS_KERNELSPEC = "../kernelspec/java";
     private static final String FS_RESOURCES = "src/test/resources";
 
-    static {
-        container = new GenericContainer<>(BASE_IMAGE)
-                .withWorkingDirectory(WORKING_DIRECTORY)
-                .withCopyToContainer(MountableFile.forHostPath(FS_KERNELSPEC), CONTAINER_KERNELSPEC)
-                .withCopyToContainer(MountableFile.forHostPath(FS_RESOURCES), CONTAINER_RESOURCES)
-                .withCommand("bash", "-c", getStartupCommand())
-                .withLogConsumer(new Slf4jLogConsumer(LOGGER))
-                .waitingFor(Wait.forSuccessfulCommand(getSuccessfulCommand()))
-                .withStartupTimeout(Duration.ofMinutes(1));
-        container.start();
-    }
+    private static final String TESTS_ENABLED_PROPERTY = "docker.tests.enabled";
 
     @BeforeAll
-    static void compileSources() throws IOException, InterruptedException {
+    static void setUp() throws IOException, InterruptedException {
+        System.out.println("ContainerizedKernelCase.setUp");
+        initializeContainer();
+        Assumptions.assumeTrue(container != null, "Docker tests are disabled. Enable with -Pdocker");
+        System.out.println("container = " + container);
+
         String source = "$(find " + CONTAINER_RESOURCES + "/src -name '*.java')";
         Container.ExecResult compileResult = executeInContainer("javac -d " + TEST_CLASSPATH + " " + source);
 
@@ -83,6 +79,22 @@ public abstract class ContainerizedKernelCase {
         LOGGER.debug("stderr = {}", execResult.getStderr());
         LOGGER.debug("stdout = {}", execResult.getStdout());
         return execResult;
+    }
+
+    private static void initializeContainer() {
+        if (container != null || !"true".equals(System.getProperty(TESTS_ENABLED_PROPERTY))) {
+            return;
+        }
+
+        container = new GenericContainer<>(BASE_IMAGE)
+                .withWorkingDirectory(WORKING_DIRECTORY)
+                .withCopyToContainer(MountableFile.forHostPath(FS_KERNELSPEC), CONTAINER_KERNELSPEC)
+                .withCopyToContainer(MountableFile.forHostPath(FS_RESOURCES), CONTAINER_RESOURCES)
+                .withCommand("bash", "-c", getStartupCommand())
+                .withLogConsumer(new Slf4jLogConsumer(LOGGER))
+                .waitingFor(Wait.forSuccessfulCommand(getSuccessfulCommand()))
+                .withStartupTimeout(Duration.ofMinutes(1));
+        container.start();
     }
 
     private static String getStartupCommand() {
