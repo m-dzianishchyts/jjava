@@ -8,11 +8,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        java: [ 11, 17, 21 ]
+        os: [ ubuntu-latest ]
+        java: [ 11, 17, 21, 25 ]
+        include:
+          - os: windows-latest
+            java: 25
 
     steps:
       - name: Checkout
