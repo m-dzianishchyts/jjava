@@ -69,7 +69,7 @@ public abstract class ContainerizedKernelCase {
 
     protected static Container.ExecResult executeInKernel(String snippet, Map<String, String> env) throws IOException, InterruptedException {
         String snippet64 = Base64.getEncoder().encodeToString(snippet.getBytes());
-        String jupyterCommand = venvCommand("jupyter console --kernel=java --simple-prompt");
+        String jupyterCommand = venvCommand("jupyter console --kernel=java --simple-prompt --no-confirm-exit -y");
         String[] containerCommand = new String[]{"bash", "-c", "echo \"" + snippet64 + "\" | base64 -d | " + jupyterCommand};
         Container.ExecResult execResult = container.execInContainer(ExecConfig.builder()
                 .envVars(env)
@@ -88,7 +88,7 @@ public abstract class ContainerizedKernelCase {
     private static String getStartupCommand() {
         return String.join(" && ",
                 "apt-get update",
-                "apt-get install --no-install-recommends -y python3 python3-pip python3-venv",
+                "apt-get install --no-install-recommends -y python3 python3-pip python3-venv curl",
                 "python3 -m venv ./venv",
                 venvCommand("pip install jupyter-console --progress-bar off"),
                 "tail -f /dev/null"
