@@ -65,7 +65,7 @@ public abstract class ContainerizedKernelCase {
 
     protected static Container.ExecResult executeInKernel(String snippet, Map<String, String> env) throws IOException, InterruptedException {
         String snippet64 = Base64.getEncoder().encodeToString(snippet.getBytes());
-        String jupyterCommand = venvCommand("jupyter console --kernel=java --simple-prompt");
+        String jupyterCommand = venvCommand("jupyter console --kernel=java --simple-prompt --no-confirm-exit -y");
         String[] containerCommand = new String[]{"bash", "-c", "echo \"" + snippet64 + "\" | base64 -d | " + jupyterCommand};
         Container.ExecResult execResult = container.execInContainer(ExecConfig.builder()
                 .envVars(env)
