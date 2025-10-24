@@ -39,10 +39,8 @@ public abstract class ContainerizedKernelCase {
 
     @BeforeAll
     static void setUp() throws IOException, InterruptedException {
-        System.out.println("ContainerizedKernelCase.setUp");
         initializeContainer();
         Assumptions.assumeTrue(container != null, "Docker tests are disabled. Enable with -Pdocker");
-        System.out.println("container = " + container);
 
         String source = "$(find " + CONTAINER_RESOURCES + "/src -name '*.java')";
         Container.ExecResult compileResult = executeInContainer("javac -d " + TEST_CLASSPATH + " " + source);

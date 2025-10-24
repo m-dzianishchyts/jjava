@@ -10,10 +10,10 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class KernelEnvIT extends ContainerizedKernelCase {
+class KernelEnvIT extends ContainerizedKernelCase {
 
     @Test
-    public void compilerOpts() throws Exception {
+    void compilerOpts() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_COMPILER_OPTS, "-source 9");
         String snippet = "var value = 1;";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
@@ -27,7 +27,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void timeout() throws Exception {
+    void timeout() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_TIMEOUT, "3000");
         String snippet = "Thread.sleep(5000);";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
@@ -39,7 +39,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void classpath() throws Exception {
+    void classpath() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_CLASSPATH, TEST_CLASSPATH);
         String snippet = String.join("; ",
                 "import org.dflib.jjava.Dummy",
@@ -52,7 +52,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void startUpScriptsPath() throws Exception {
+    void startUpScriptsPath() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_STARTUP_SCRIPTS_PATH,  CONTAINER_RESOURCES + "/test-ping.jshell");
         String snippet = "ping()";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
@@ -62,7 +62,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void startUpScript() throws Exception {
+    void startUpScript() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_STARTUP_SCRIPT, "public String ping() { return \"pong!\"; }");
         String snippet = "ping()";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
@@ -72,7 +72,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void loadExtensions_Default() throws Exception {
+    void loadExtensions_Default() throws Exception {
         String snippet = "printf(\"Hello, %s!\", \"world\");";
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
@@ -81,7 +81,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void loadExtensions_Disable() throws Exception {
+    void loadExtensions_Disable() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_LOAD_EXTENSIONS, "0");
         String snippet = "printf(\"Hello, %s!\", \"world\");";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
@@ -93,7 +93,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void jvmOpts() throws Exception {
+    void jvmOpts() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_JVM_OPTS, "-Xmx300m");
         String snippet = "Runtime.getRuntime().maxMemory()";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);

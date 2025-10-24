@@ -8,11 +8,11 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class KernelMagicIT extends ContainerizedKernelCase {
+class KernelMagicIT extends ContainerizedKernelCase {
 
     @Deprecated
     @Test
-    public void jars() throws Exception {
+    void jars() throws Exception {
         String jar = CONTAINER_RESOURCES + "/jakarta.annotation-api-3.0.0.jar";
         Container.ExecResult fetchResult = container.execInContainer(
                 "curl", "-L", "-s", "-S", "-f",
@@ -33,7 +33,7 @@ public class KernelMagicIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void classpath() throws Exception {
+    void classpath() throws Exception {
         String snippet = String.join("\n",
                 "%classpath " + TEST_CLASSPATH,
                 "import org.dflib.jjava.Dummy;",
@@ -46,7 +46,7 @@ public class KernelMagicIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void maven() throws Exception {
+    void maven() throws Exception {
         String snippet = String.join("\n",
                 "%maven org.dflib:dflib-jupyter:1.0.0-RC1",
                 "System.getProperty(\"java.class.path\")"
@@ -59,7 +59,7 @@ public class KernelMagicIT extends ContainerizedKernelCase {
 
     @Deprecated
     @Test
-    public void mavenIvySyntax() throws Exception {
+    void mavenIvySyntax() throws Exception {
         String snippet = String.join("\n",
                 "%maven jakarta.annotation#jakarta.annotation-api;3.0.0",
                 "System.getProperty(\"java.class.path\")"
@@ -72,7 +72,7 @@ public class KernelMagicIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void load() throws Exception {
+    void load() throws Exception {
         String script = CONTAINER_RESOURCES + "/test-ping.jshell";
         String snippet = String.join("\n",
                 "%load " + script,
@@ -85,7 +85,7 @@ public class KernelMagicIT extends ContainerizedKernelCase {
     }
 
     @Test
-    public void loadFromPOM() throws Exception {
+    void loadFromPOM() throws Exception {
         String pom = CONTAINER_RESOURCES + "/test-pom.xml";
         String snippet = String.join("\n",
                 "%loadFromPOM " + pom,
