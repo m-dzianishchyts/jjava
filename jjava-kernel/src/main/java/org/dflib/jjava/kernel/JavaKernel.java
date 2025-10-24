@@ -110,7 +110,7 @@ public class JavaKernel extends BaseKernel {
         String classpathResolved = PathsHandler.joinPaths(PathsHandler.splitAndResolveGlobs(classpath));
         jShell.addToClasspath(classpathResolved);
         if (extensionsEnabled) {
-            installExtensionsFromClasspath(classpathResolved);
+            installExtensions(classpathResolved);
         }
     }
 
@@ -345,6 +345,14 @@ public class JavaKernel extends BaseKernel {
     @Override
     public void interrupt() {
         this.evaluator.interrupt();
+    }
+
+    /**
+     * Returns notebook ClassLoader, which in the case of JavaKernel is a JShell ClassLoader.
+     */
+    @Override
+    protected ClassLoader getClassLoader() {
+        return evaluator.getClassLoader();
     }
 
     /**
