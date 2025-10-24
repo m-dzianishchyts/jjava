@@ -14,7 +14,6 @@ import org.testcontainers.utility.MountableFile;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +34,6 @@ public abstract class ContainerizedKernelCase {
     private static final String FS_KERNELSPEC = "../kernelspec/java";
     private static final String FS_RESOURCES = "src/test/resources";
 
-    private static final Duration KERNEL_EXECUTION_TIMEOUT = Duration.ofMinutes(1);
     private static final String TESTS_ENABLED_PROPERTY = "docker.tests.enabled";
 
     @BeforeAll
@@ -63,16 +61,28 @@ public abstract class ContainerizedKernelCase {
     }
 
     protected static Container.ExecResult executeInKernel(String snippet, Map<String, String> env) throws IOException, InterruptedException {
-        String snippetEOL = snippet + "\n";
-        String snippet64 = Base64.getEncoder().encodeToString(snippetEOL.getBytes());
-        String jupyterCommand = venvCommand("jupyter console --kernel=java --simple-prompt --no-confirm-exit -y");
-        String[] containerCommand = new String[]{
-                "timeout",
-                String.valueOf(KERNEL_EXECUTION_TIMEOUT.getSeconds()),
-                "bash",
-                "-c",
-                "echo \"" + snippet64 + "\" | base64 -d | " + jupyterCommand
-        };
+        StringBuilder snippetLines = new StringBuilder();
+        for (String line : snippet.split("\n")) {
+            String lineEscaped = line.replace("\\", "\\\\").replace("\"", "\\\"");
+            snippetLines.append("p.sendline(\"").append(lineEscaped).append("\")\n");
+            snippetLines.append("p.expect(r'In \\[\\d+\\]:')\n");
+        }
+
+        String pexpectScript = String.join("\n",
+                "import pexpect,sys,os,time",
+                "p=pexpect.spawn('" + venvCommand("jupyter") + "',"
+                        + "['console','--kernel=java','--no-confirm-exit','--simple-prompt'],"
+                        + "env=os.environ,timeout=60,encoding='utf-8')",
+                "p.logfile=sys.stdout",
+                "p.expect(r'In \\[\\d+\\]:',timeout=10)",
+                snippetLines.toString(),
+                "p.logfile.flush()",
+                "time.sleep(0.1)",
+                "p.sendeof()",
+                "p.expect(pexpect.EOF,timeout=5)",
+                "p.close()"
+        );
+        String[] containerCommand = new String[]{venvCommand("python"), "-c", pexpectScript};
         Container.ExecResult execResult = container.execInContainer(ExecConfig.builder()
                 .envVars(env)
                 .command(containerCommand)
@@ -82,7 +92,6 @@ public abstract class ContainerizedKernelCase {
         LOGGER.info("env = {}", env);
         LOGGER.info("snippet = {}", snippet);
         LOGGER.info("exitCode = {}", execResult.getExitCode());
-        LOGGER.debug("stderr = {}", execResult.getStderr());
         LOGGER.debug("stdout = {}", execResult.getStdout());
         return execResult;
     }
@@ -108,7 +117,7 @@ public abstract class ContainerizedKernelCase {
                 "apt-get update",
                 "apt-get install --no-install-recommends -y python3 python3-pip python3-venv curl",
                 "python3 -m venv ./venv",
-                venvCommand("pip install jupyter-console --progress-bar off"),
+                venvCommand("pip install jupyter-console pexpect --progress-bar off"),
                 "tail -f /dev/null"
         );
     }

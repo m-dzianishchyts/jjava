@@ -19,7 +19,7 @@ class KernelMagicIT extends ContainerizedKernelCase {
                 "https://repo1.maven.org/maven2/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar",
                 "-o", jar
         );
-        assertEquals(0, fetchResult.getExitCode(), fetchResult.getStdout() + "\n" + fetchResult.getStderr());
+        assertEquals(0, fetchResult.getExitCode(), fetchResult.getStdout());
 
         String snippet = String.join("\n",
                 "%jars " + jar,
@@ -28,7 +28,7 @@ class KernelMagicIT extends ContainerizedKernelCase {
         );
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("jakarta.annotation.Nullable"));
     }
 
@@ -41,7 +41,7 @@ class KernelMagicIT extends ContainerizedKernelCase {
         );
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("org.dflib.jjava.Dummy"));
     }
 
@@ -53,7 +53,7 @@ class KernelMagicIT extends ContainerizedKernelCase {
         );
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("dflib-jupyter-1.0.0-RC1.jar"));
     }
 
@@ -67,7 +67,7 @@ class KernelMagicIT extends ContainerizedKernelCase {
 
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("jakarta.annotation-api-3.0.0.jar"));
     }
 
@@ -80,7 +80,7 @@ class KernelMagicIT extends ContainerizedKernelCase {
         );
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("pong!"));
     }
 
@@ -94,7 +94,7 @@ class KernelMagicIT extends ContainerizedKernelCase {
         );
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("jakarta.annotation.Nullable"));
     }
 }

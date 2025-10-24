@@ -18,7 +18,7 @@ class KernelEnvIT extends ContainerizedKernelCase {
         String snippet = "var value = 1;";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
 
-        assertThat(snippetResult.getStderr(), CoreMatchers.allOf(
+        assertThat(snippetResult.getStdout(), CoreMatchers.allOf(
                 containsString("|   var value = 1;"),
                 containsString(Runtime.version().feature() == 11
                         ? "'var' is a restricted local variable type"
@@ -32,7 +32,7 @@ class KernelEnvIT extends ContainerizedKernelCase {
         String snippet = "Thread.sleep(5000);";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
 
-        assertThat(snippetResult.getStderr(), CoreMatchers.allOf(
+        assertThat(snippetResult.getStdout(), CoreMatchers.allOf(
                 containsString("|   " + snippet),
                 containsString("Evaluation timed out after 3000 milliseconds.")
         ));
@@ -41,13 +41,13 @@ class KernelEnvIT extends ContainerizedKernelCase {
     @Test
     void classpath() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_CLASSPATH, TEST_CLASSPATH);
-        String snippet = String.join("; ",
-                "import org.dflib.jjava.Dummy",
-                "Dummy.class.getName()"
+        String snippet = String.join("\n",
+                "import org.dflib.jjava.Dummy;",
+                "Dummy.class.getName();"
         );
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("org.dflib.jjava.Dummy"));
     }
 
@@ -57,7 +57,7 @@ class KernelEnvIT extends ContainerizedKernelCase {
         String snippet = "ping()";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("pong!"));
     }
 
@@ -67,7 +67,7 @@ class KernelEnvIT extends ContainerizedKernelCase {
         String snippet = "ping()";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("pong!"));
     }
 
@@ -76,7 +76,7 @@ class KernelEnvIT extends ContainerizedKernelCase {
         String snippet = "printf(\"Hello, %s!\", \"world\");";
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("Hello, world!"));
     }
 
@@ -86,7 +86,7 @@ class KernelEnvIT extends ContainerizedKernelCase {
         String snippet = "printf(\"Hello, %s!\", \"world\");";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
 
-        assertThat(snippetResult.getStderr(), CoreMatchers.allOf(
+        assertThat(snippetResult.getStdout(), CoreMatchers.allOf(
                 containsString("|   " + snippet),
                 containsString("cannot find symbol")
         ));
@@ -98,7 +98,7 @@ class KernelEnvIT extends ContainerizedKernelCase {
         String snippet = "Runtime.getRuntime().maxMemory()";
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString(String.valueOf(300 * (int) Math.pow(1024, 2))));
     }
 }

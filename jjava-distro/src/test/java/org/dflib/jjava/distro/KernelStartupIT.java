@@ -14,7 +14,7 @@ class KernelStartupIT extends ContainerizedKernelCase {
         String snippet = "1000d + 1";
         Container.ExecResult snippetResult = executeInKernel(snippet);
 
-        assertThat(snippetResult.getStderr(), not(containsString("|")));
+        assertThat(snippetResult.getStdout(), not(containsString("|")));
         assertThat(snippetResult.getStdout(), containsString("1001.0"));
     }
 }
