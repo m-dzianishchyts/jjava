@@ -19,7 +19,7 @@ public class KernelMagicIT extends ContainerizedKernelCase {
                 "https://repo1.maven.org/maven2/jakarta/annotation/jakarta.annotation-api/3.0.0/jakarta.annotation-api-3.0.0.jar",
                 "-o", jar
         );
-        assertEquals("", fetchResult.getStderr());
+        assertEquals(0, fetchResult.getExitCode(), fetchResult.getStdout() + "\n" + fetchResult.getStderr());
 
         String snippet = String.join("\n",
                 "%jars " + jar,

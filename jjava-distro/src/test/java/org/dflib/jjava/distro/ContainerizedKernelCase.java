@@ -100,7 +100,7 @@ public abstract class ContainerizedKernelCase {
     private static String getStartupCommand() {
         return String.join(" && ",
                 "apt-get update",
-                "apt-get install --no-install-recommends -y python3 python3-pip python3-venv",
+                "apt-get install --no-install-recommends -y python3 python3-pip python3-venv curl",
                 "python3 -m venv ./venv",
                 venvCommand("pip install jupyter-console --progress-bar off"),
                 "tail -f /dev/null"
