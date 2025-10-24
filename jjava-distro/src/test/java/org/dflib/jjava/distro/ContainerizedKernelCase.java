@@ -35,6 +35,7 @@ public abstract class ContainerizedKernelCase {
     private static final String FS_KERNELSPEC = "../kernelspec/java";
     private static final String FS_RESOURCES = "src/test/resources";
 
+    private static final Duration KERNEL_EXECUTION_TIMEOUT = Duration.ofMinutes(1);
     private static final String TESTS_ENABLED_PROPERTY = "docker.tests.enabled";
 
     @BeforeAll
@@ -65,7 +66,13 @@ public abstract class ContainerizedKernelCase {
         String snippetEOL = snippet + "\n";
         String snippet64 = Base64.getEncoder().encodeToString(snippetEOL.getBytes());
         String jupyterCommand = venvCommand("jupyter console --kernel=java --simple-prompt --no-confirm-exit -y");
-        String[] containerCommand = new String[]{"bash", "-c", "echo \"" + snippet64 + "\" | base64 -d | " + jupyterCommand};
+        String[] containerCommand = new String[]{
+                "timeout",
+                String.valueOf(KERNEL_EXECUTION_TIMEOUT.getSeconds()),
+                "bash",
+                "-c",
+                "echo \"" + snippet64 + "\" | base64 -d | " + jupyterCommand
+        };
         Container.ExecResult execResult = container.execInContainer(ExecConfig.builder()
                 .envVars(env)
                 .command(containerCommand)
