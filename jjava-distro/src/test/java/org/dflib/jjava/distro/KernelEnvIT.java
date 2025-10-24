@@ -41,8 +41,8 @@ public class KernelEnvIT extends ContainerizedKernelCase {
     @Test
     public void classpath() throws Exception {
         Map<String, String> env = Map.of(Env.JJAVA_CLASSPATH, TEST_CLASSPATH);
-        String snippet = String.join("\n",
-                "import org.dflib.jjava.Dummy;",
+        String snippet = String.join("; ",
+                "import org.dflib.jjava.Dummy",
                 "Dummy.class.getName()"
         );
         Container.ExecResult snippetResult = executeInKernel(snippet, env);
