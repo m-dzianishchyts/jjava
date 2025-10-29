@@ -61,25 +61,23 @@ public abstract class ContainerizedKernelCase {
     }
 
     protected static Container.ExecResult executeInKernel(String snippet, Map<String, String> env) throws IOException, InterruptedException {
-        StringBuilder snippetLines = new StringBuilder();
-        for (String line : snippet.split("\n")) {
-            String lineEscaped = line.replace("\\", "\\\\").replace("\"", "\\\"");
-            snippetLines.append("p.sendline(\"").append(lineEscaped).append("\")\n");
-            snippetLines.append("p.expect(r'In \\[\\d+\\]:')\n");
-        }
-
+        String snippetEscaped = snippet.replace("\\", "\\\\").replace("\"", "\\\"");
         String pexpectScript = String.join("\n",
-                "import pexpect,sys,os,time",
-                "p=pexpect.spawn('" + venvCommand("jupyter") + "',"
-                        + "['console','--kernel=java','--no-confirm-exit','--simple-prompt'],"
-                        + "env=os.environ,timeout=60,encoding='utf-8')",
-                "p.logfile=sys.stdout",
-                "p.expect(r'In \\[\\d+\\]:',timeout=10)",
-                snippetLines.toString(),
+                "import pexpect, sys, os, time",
+                "env = os.environ.copy()",
+                "env['PROMPT_TOOLKIT_NO_CPR'] = '1'",
+                "env['TERM'] = 'dumb'",
+                "p=pexpect.spawn('" + venvCommand("jupyter") + "', "
+                        + "['console', '--kernel=java', '--no-confirm-exit'], "
+                        + "env=env, timeout=60, encoding='utf-8')",
+                "p.logfile = sys.stdout",
+                "p.expect(r'In \\[\\d+\\]:', timeout=10)",
+                "p.send(\"\"\"" + snippetEscaped + "\\n\"\"\")",
+                "p.expect(r'In \\[\\d+\\]:')",
                 "p.logfile.flush()",
                 "time.sleep(0.1)",
                 "p.sendeof()",
-                "p.expect(pexpect.EOF,timeout=5)",
+                "p.expect(pexpect.EOF, timeout=5)",
                 "p.close()"
         );
         String[] containerCommand = new String[]{venvCommand("python"), "-c", pexpectScript};
@@ -93,6 +91,7 @@ public abstract class ContainerizedKernelCase {
         LOGGER.info("snippet = {}", snippet);
         LOGGER.info("exitCode = {}", execResult.getExitCode());
         LOGGER.debug("stdout = {}", execResult.getStdout());
+        LOGGER.debug("stderr = {}", execResult.getStderr());
         return execResult;
     }
 
