@@ -127,6 +127,8 @@ public class JavaKernel extends BaseKernel {
             return formatEvaluationTimeoutException((EvaluationTimeoutException) e);
         } else if (e instanceof EvaluationInterruptedException) {
             return formatEvaluationInterruptedException((EvaluationInterruptedException) e);
+        } else if (e instanceof RuntimeException && e.getCause() instanceof EvalException) {
+            return formatEvalException((EvalException) e.getCause());
         } else {
             return new ArrayList<>(super.formatError(e));
         }
@@ -180,14 +182,28 @@ public class JavaKernel extends BaseKernel {
     private List<String> formatEvalException(EvalException e) {
         List<String> fmt = new ArrayList<>();
 
-
-        String evalExceptionClassName = EvalException.class.getName();
         String actualExceptionName = e.getExceptionClassName();
-        super.formatError(e).stream()
-                .map(line -> line.replace(evalExceptionClassName, actualExceptionName))
-                .forEach(fmt::add);
+        fmt.add(errorStyler.secondary(actualExceptionName + ": " + e.getMessage()));
+        for (StackTraceElement element : e.getStackTrace()) {
+            fmt.add(errorStyler.secondary("\tat " + element));
+        }
 
+        formatEvalExceptionCause((EvalException) e.getCause(), fmt);
         return fmt;
+    }
+
+    private void formatEvalExceptionCause(EvalException e, List<String> fmt) {
+        if (e == null) {
+            return;
+        }
+
+        String actualExceptionName = e.getExceptionClassName();
+        fmt.add(errorStyler.secondary("Caused by: " + actualExceptionName + ": " + e.getMessage()));
+        for (StackTraceElement element : e.getStackTrace()) {
+            fmt.add(errorStyler.secondary("\tat " + element));
+        }
+        
+        formatEvalExceptionCause((EvalException) e.getCause(), fmt);
     }
 
     private List<String> formatUnresolvedReferenceException(UnresolvedReferenceException e) {
