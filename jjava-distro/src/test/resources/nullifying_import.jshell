@@ -1,5 +1,5 @@
-%maven tools.jackson.core:jackson-databind:3.1.2
-import tools.jackson.databind.*; import tools.jackson.databind.json.*;
-var om = JsonMapper.builder().findAndAddModules().build();
-import tools.jackson.databind.node.*; import tools.jackson.databind.type.*;
+%maven com.fasterxml.jackson.core:jackson-databind:2.21.2
+import com.fasterxml.jackson.databind.*;
+var om = new ObjectMapper().findAndRegisterModules();
+import com.fasterxml.jackson.databind.node.*; import com.fasterxml.jackson.databind.type.*;
 om.getClass().getName()
