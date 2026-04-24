@@ -76,6 +76,11 @@ class JJavaExecutionControl extends DirectExecutionControl {
         executor.shutdownNow();
     }
 
+    @Override
+    public void redefine(ClassBytecodes[] cbcs) {
+        loaderDelegate.classesRedefined(cbcs);
+    }
+
     public Object takeResult(String id) {
         Object result = this.results.remove(id);
         if (result == null) {
