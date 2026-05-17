@@ -1,0 +1,5 @@
+%maven com.fasterxml.jackson.core:jackson-databind:2.21.2
+import com.fasterxml.jackson.databind.*;
+var om = new ObjectMapper().findAndRegisterModules();
+import com.fasterxml.jackson.databind.node.*; import com.fasterxml.jackson.databind.type.*;
+om.getClass().getName()
