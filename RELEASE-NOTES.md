@@ -2,6 +2,7 @@
 
 * #114 %load magic does not recognize notebooks
 * #115 "%load" magic should not be adding extensions to file names
+* #119 Variable nullification on later imports
 
 ## 1.0-a7
 
