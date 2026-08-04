@@ -17,6 +17,7 @@ Fields: "status" (always present, "ok" or "error"), "result", "display", "stdout
 import base64
 import re
 import sys
+from queue import Empty
 
 from jupyter_client.manager import start_new_kernel
 
@@ -34,12 +35,24 @@ def emit(cell_number, field, value):
         print("%s|%d|%s|%s" % (PREFIX, cell_number, field, encoded), flush=True)
 
 
+def receive(receiver, channel, cell_number):
+    """
+    Reads the next message off a kernel channel. Every read is bounded by MESSAGE_TIMEOUT, so a
+    kernel that dies or never goes idle fails the test instead of hanging it.
+    """
+    try:
+        return receiver(timeout=MESSAGE_TIMEOUT)
+    except Empty:
+        raise SystemExit("Cell %d: no %s message within %d seconds"
+                         % (cell_number, channel, MESSAGE_TIMEOUT))
+
+
 def execute(client, cell_number, source):
     msg_id = client.execute(source, allow_stdin=False)
 
     outputs = {"result": "", "display": "", "stdout": "", "stderr": "", "error": ""}
     while True:
-        message = client.get_iopub_msg(timeout=MESSAGE_TIMEOUT)
+        message = receive(client.get_iopub_msg, "iopub", cell_number)
         if message["parent_header"].get("msg_id") != msg_id:
             continue
 
@@ -60,7 +73,13 @@ def execute(client, cell_number, source):
             lines.extend(content["traceback"])
             outputs["error"] += ANSI.sub("", "\n".join(lines))
 
-    reply = client.get_shell_msg(timeout=MESSAGE_TIMEOUT)
+    # "wait_for_ready" re-sends "kernel_info_request" until the kernel answers, and consumes
+    # only one of the replies, so the shell channel may still hold replies to those extra
+    # requests. Skip anything that is not a reply to our own request.
+    while True:
+        reply = receive(client.get_shell_msg, "shell", cell_number)
+        if reply["parent_header"].get("msg_id") == msg_id:
+            break
 
     emit(cell_number, "status", reply["content"]["status"])
     for field, value in outputs.items():
