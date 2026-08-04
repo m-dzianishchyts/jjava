@@ -40,11 +40,6 @@ public class KernelExecutionIT extends ContainerizedKernelCase {
         assertEquals("2.4", run.cell(4).result());
     }
 
-    /**
-     * Re-executing an edited cell must pick up the new value.
-     *
-     * @see <a href="https://github.com/dflib/jjava/issues/119#issuecomment-4754144547">#119</a>
-     */
     @Test
     public void variableRedeclarationInSameCell() throws Exception {
         KernelRun run = executeInKernel(
