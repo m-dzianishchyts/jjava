@@ -4,9 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class KernelStartupIT extends ContainerizedKernelCase {
 
@@ -25,6 +24,7 @@ public class KernelStartupIT extends ContainerizedKernelCase {
         );
         KernelRun run = executeInKernel(env, "\"hash = \" + obj.hashCode()").assertNoErrors();
 
-        assertThat(run.cell(1).result(), matchesPattern("hash = -?\\d+"));
+        String result = run.cell(1).result();
+        assertTrue(result.matches("hash = -?\\d+"), () -> "Unexpected result: " + result);
     }
 }

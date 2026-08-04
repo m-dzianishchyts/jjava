@@ -2,6 +2,8 @@ package org.dflib.jjava.distro;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 /**
  * Everything a single notebook cell sent back over the Jupyter protocol.
  */
@@ -65,6 +67,24 @@ public class CellOutput {
      */
     public String error() {
         return field("error");
+    }
+
+    /**
+     * Asserts that the cell failed, and that its error contains every one of the provided fragments.
+     */
+    public CellOutput assertError(String... errorFragments) {
+        if (isOk()) {
+            fail("Cell " + number + " was expected to fail, but did not:\n" + this);
+        }
+
+        String error = error();
+        for (String fragment : errorFragments) {
+            if (!error.contains(fragment)) {
+                fail("Cell " + number + " error does not contain '" + fragment + "':\n" + this);
+            }
+        }
+
+        return this;
     }
 
     private String field(String name) {

@@ -4,11 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class KernelEnvIT extends ContainerizedKernelCase {
 
@@ -18,14 +14,11 @@ public class KernelEnvIT extends ContainerizedKernelCase {
         String cell = "var value = 1;";
         KernelRun run = executeInKernel(env, cell);
 
-        CellOutput output = run.cell(1);
-        assertFalse(output.isOk(), run::toString);
-        assertThat(output.error(), allOf(
-                containsString("|   " + cell),
-                containsString(Runtime.version().feature() == 11
+        run.cell(1).assertError(
+                "|   " + cell,
+                Runtime.version().feature() == 11
                         ? "'var' is a restricted local variable type"
-                        : "'var' is a restricted type name")
-        ));
+                        : "'var' is a restricted type name");
     }
 
     @Test
@@ -34,12 +27,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
         String cell = "Thread.sleep(5000);";
         KernelRun run = executeInKernel(env, cell);
 
-        CellOutput output = run.cell(1);
-        assertFalse(output.isOk(), run::toString);
-        assertThat(output.error(), allOf(
-                containsString("|   " + cell),
-                containsString("Evaluation timed out after 3000 milliseconds.")
-        ));
+        run.cell(1).assertError("|   " + cell, "Evaluation timed out after 3000 milliseconds.");
     }
 
     @Test
@@ -82,12 +70,7 @@ public class KernelEnvIT extends ContainerizedKernelCase {
         String cell = "printf(\"Hello, %s!\", \"world\");";
         KernelRun run = executeInKernel(env, cell);
 
-        CellOutput output = run.cell(1);
-        assertFalse(output.isOk(), run::toString);
-        assertThat(output.error(), allOf(
-                containsString("|   " + cell),
-                containsString("cannot find symbol")
-        ));
+        run.cell(1).assertError("|   " + cell, "cannot find symbol");
     }
 
     @Test

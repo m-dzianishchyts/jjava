@@ -3,9 +3,8 @@ package org.dflib.jjava.distro;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.Container;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class KernelMagicIT extends ContainerizedKernelCase {
 
@@ -47,7 +46,8 @@ public class KernelMagicIT extends ContainerizedKernelCase {
                 "System.getProperty(\"java.class.path\")"
         ).assertNoErrors();
 
-        assertThat(run.cell(2).result(), containsString("dflib-jupyter-1.0.0-RC1.jar"));
+        String classpath = run.cell(2).result();
+        assertTrue(classpath.contains("dflib-jupyter-1.0.0-RC1.jar"), () -> "Unexpected classpath: " + classpath);
     }
 
     @Deprecated
@@ -58,7 +58,8 @@ public class KernelMagicIT extends ContainerizedKernelCase {
                 "System.getProperty(\"java.class.path\")"
         ).assertNoErrors();
 
-        assertThat(run.cell(2).result(), containsString("jakarta.annotation-api-3.0.0.jar"));
+        String classpath = run.cell(2).result();
+        assertTrue(classpath.contains("jakarta.annotation-api-3.0.0.jar"), () -> "Unexpected classpath: " + classpath);
     }
 
     @Test
