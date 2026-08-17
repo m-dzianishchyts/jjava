@@ -1,6 +1,5 @@
 package org.dflib.jjava.distro;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,7 +11,6 @@ public class KernelExecutionIT extends ContainerizedKernelCase {
      * scenario passes even with the bug present.
      */
     @Test
-    @Disabled
     public void variableSurvivesLaterImports() throws Exception {
         KernelRun run = executeInKernel(
                 "%maven com.fasterxml.jackson.core:jackson-databind:2.21.2",
