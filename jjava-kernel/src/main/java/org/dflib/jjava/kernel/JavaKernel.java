@@ -8,6 +8,7 @@ import jdk.jshell.SnippetEvent;
 import jdk.jshell.SourceCodeAnalysis;
 import jdk.jshell.UnresolvedReferenceException;
 import org.dflib.jjava.jupyter.kernel.BaseKernel;
+import org.dflib.jjava.jupyter.kernel.EvalBuilder;
 import org.dflib.jjava.jupyter.kernel.HelpLink;
 import org.dflib.jjava.jupyter.kernel.JupyterIO;
 import org.dflib.jjava.jupyter.kernel.LanguageInfo;
@@ -17,6 +18,9 @@ import org.dflib.jjava.jupyter.kernel.display.DisplayData;
 import org.dflib.jjava.jupyter.kernel.display.Renderer;
 import org.dflib.jjava.jupyter.kernel.history.HistoryManager;
 import org.dflib.jjava.jupyter.kernel.magic.MagicTranspiler;
+import org.dflib.jjava.jupyter.kernel.magic.ParsedCellMagic;
+import org.dflib.jjava.jupyter.kernel.magic.ParsedLineMagic;
+import org.dflib.jjava.jupyter.kernel.magic.UndefinedMagicException;
 import org.dflib.jjava.jupyter.kernel.magic.MagicsRegistry;
 import org.dflib.jjava.jupyter.kernel.magic.MagicsResolver;
 import org.dflib.jjava.jupyter.kernel.util.CharPredicate;
@@ -24,11 +28,13 @@ import org.dflib.jjava.jupyter.kernel.util.PathsHandler;
 import org.dflib.jjava.jupyter.kernel.util.StringStyler;
 import org.dflib.jjava.kernel.execution.CodeEvaluator;
 import org.dflib.jjava.kernel.execution.CompilationException;
+import org.dflib.jjava.kernel.execution.DisplayCallbackServer;
 import org.dflib.jjava.kernel.execution.EvaluationInterruptedException;
+import org.dflib.jjava.kernel.execution.ExecutorTerminationException;
 import org.dflib.jjava.kernel.execution.EvaluationTimeoutException;
 import org.dflib.jjava.kernel.execution.IncompleteSourceException;
 
-import java.nio.charset.Charset;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +67,8 @@ public class JavaKernel extends BaseKernel {
 
     private final JShell jShell;
     private final CodeEvaluator evaluator;
+    private volatile boolean shuttingDown;
+    private DisplayCallbackServer displayCallbackServer;
 
     protected JavaKernel(
             String name,
@@ -94,6 +102,9 @@ public class JavaKernel extends BaseKernel {
 
         this.jShell = jShell;
         this.evaluator = evaluator;
+        jShell.onShutdown(ignored -> {
+            if (!shuttingDown) evaluator.markExecutorTerminated();
+        });
     }
 
     /**
@@ -127,6 +138,8 @@ public class JavaKernel extends BaseKernel {
             return formatEvaluationTimeoutException((EvaluationTimeoutException) e);
         } else if (e instanceof EvaluationInterruptedException) {
             return formatEvaluationInterruptedException((EvaluationInterruptedException) e);
+        } else if (e instanceof ExecutorTerminationException) {
+            return List.of(errorStyler.secondary(e.getMessage()));
         } else if (e instanceof RuntimeException && e.getCause() instanceof EvalException) {
             return formatEvalException((EvalException) e.getCause());
         } else {
@@ -242,8 +255,93 @@ public class JavaKernel extends BaseKernel {
     }
 
     @Override
+    public <T> EvalBuilder<T> evalBuilder(String source) {
+        return new JavaEvalBuilder<>(this, source, null, null, false);
+    }
+
+    @Override
     protected Object doEval(String source) {
         return evaluator.eval(jShell, source);
+    }
+
+    private static final class JavaEvalBuilder<T> implements EvalBuilder<T> {
+        private final JavaKernel kernel;
+        private final String source;
+        private final ParsedLineMagic lineMagic;
+        private final ParsedCellMagic cellMagic;
+        private final boolean renderResults;
+
+        private JavaEvalBuilder(
+                JavaKernel kernel,
+                String source,
+                ParsedLineMagic lineMagic,
+                ParsedCellMagic cellMagic,
+                boolean renderResults) {
+            this.kernel = kernel;
+            this.source = source;
+            this.lineMagic = lineMagic;
+            this.cellMagic = cellMagic;
+            this.renderResults = renderResults;
+        }
+
+        @Override
+        public EvalBuilder<T> resolveMagics() {
+            if (lineMagic != null || cellMagic != null) {
+                return this;
+            }
+
+            ParsedCellMagic cell = kernel.getMagicsResolver().parseCellMagic(source);
+            if (cell != null) {
+                return new JavaEvalBuilder<>(kernel, source, null, cell, renderResults);
+            }
+
+            ParsedLineMagic line = kernel.getMagicsResolver().parseLineMagic(source);
+            if (line != null && line.magicLinePrefix.isBlank()) {
+                return new JavaEvalBuilder<>(kernel, source, line, null, renderResults);
+            }
+
+            return new JavaEvalBuilder<>(kernel, kernel.getMagicsResolver().resolve(source), null, null, renderResults);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public EvalBuilder<DisplayData> renderResults() {
+            return renderResults
+                    ? (EvalBuilder<DisplayData>) this
+                    : new JavaEvalBuilder<>(kernel, source, lineMagic, cellMagic, true);
+        }
+
+        @Override
+        public T eval() {
+            Object value = evalRaw();
+            if (!renderResults) {
+                return (T) value;
+            }
+            if (value == null) {
+                return null;
+            }
+            return (T) (value instanceof DisplayData ? value : new DisplayData(String.valueOf(value)));
+        }
+
+        private Object evalRaw() {
+            if (cellMagic == null && lineMagic == null) {
+                return kernel.doEval(source);
+            }
+
+            try {
+                return cellMagic != null
+                        ? kernel.getMagicsRegistry().evalCellMagic(kernel, cellMagic.name, cellMagic.args, cellMagic.cellBodyAfterMagic)
+                        : kernel.getMagicsRegistry().evalLineMagic(kernel, lineMagic.name, lineMagic.args);
+            } catch (UndefinedMagicException e) {
+                throw e;
+            } catch (Exception e) {
+                String magicName = cellMagic != null ? cellMagic.name : lineMagic.name;
+                String kind = cellMagic != null ? "cell" : "line";
+                throw new RuntimeException(
+                        String.format("Exception running %s magic '%s': %s", kind, magicName, e.getMessage()),
+                        e);
+            }
+        }
     }
 
     @Override
@@ -350,21 +448,25 @@ public class JavaKernel extends BaseKernel {
 
     @Override
     public void onShutdown(boolean isRestarting) {
-        super.onShutdown(isRestarting);
-        jShell.close();
+        shuttingDown = true;
+        try {
+            super.onShutdown(isRestarting);
+        } finally {
+            try {
+                jShell.close();
+            } finally {
+                try {
+                    if (displayCallbackServer != null) displayCallbackServer.close();
+                } finally {
+                    evaluator.close();
+                }
+            }
+        }
     }
 
     @Override
     public void interrupt() {
-        evaluator.interrupt();
-    }
-
-    /**
-     * Returns notebook ClassLoader, which in the case of JavaKernel is a JShell ClassLoader.
-     */
-    @Override
-    protected ClassLoader getClassLoader() {
-        return evaluator.getClassLoader();
+        evaluator.interrupt(jShell);
     }
 
     /**
@@ -382,33 +484,61 @@ public class JavaKernel extends BaseKernel {
         private Builder() {
         }
 
+        @SuppressWarnings("resource")
         @Override
         public JavaKernel build() {
+            DisplayCallbackServer displayCallbackServer;
+            try {
+                displayCallbackServer = new DisplayCallbackServer();
+            } catch (IOException e) {
+                throw new IllegalStateException("Unable to start display callback channel", e);
+            }
 
-            String name = buildName();
-            Charset jupyterEncoding = buildJupyterIOEncoding();
-            CodeEvaluator evaluator = buildCodeEvaluator(name);
+            JShell jShell = null;
+            CodeEvaluator evaluator = null;
+            try {
+                String name = buildName();
+                JupyterIO io = buildJupyterIO(buildJupyterIOEncoding());
+                evaluator = buildCodeEvaluator();
+                jShell = buildJShell(io, List.of("-Djjava.display.port=" + displayCallbackServer.getPort()));
+                MagicTranspiler magicTranspiler = buildMagicTranspiler();
 
-            JShell jShell = buildJShell(evaluator);
-            LanguageInfo langInfo = buildLanguageInfo();
-            MagicTranspiler magicTranspiler = buildMagicTranspiler();
+                JavaKernel kernel = new JavaKernel(
+                        name,
+                        buildVersion(),
+                        buildLanguageInfo(),
+                        buildHelpLinks(),
+                        buildHistoryManager(),
+                        io,
+                        buildCommManager(),
+                        buildRenderer(),
+                        buildMagicsResolver(magicTranspiler),
+                        buildMagicsRegistry(),
+                        buildExtensionsEnabled(),
+                        buildErrorStyler(),
+                        jShell,
+                        evaluator
+                );
+                kernel.displayCallbackServer = displayCallbackServer;
+                displayCallbackServer.setKernel(kernel);
+                return kernel;
+            } catch (RuntimeException | Error e) {
+                closeAfterFailure(e, jShell, displayCallbackServer, evaluator);
+                throw e;
+            }
+        }
 
-            return new JavaKernel(
-                    name,
-                    buildVersion(),
-                    langInfo,
-                    buildHelpLinks(),
-                    buildHistoryManager(),
-                    buildJupyterIO(jupyterEncoding),
-                    buildCommManager(),
-                    buildRenderer(),
-                    buildMagicsResolver(magicTranspiler),
-                    buildMagicsRegistry(),
-                    buildExtensionsEnabled(),
-                    buildErrorStyler(),
-                    jShell,
-                    evaluator
-            );
+        private static void closeAfterFailure(Throwable failure, AutoCloseable... resources) {
+            for (AutoCloseable resource : resources) {
+                if (resource == null) {
+                    continue;
+                }
+                try {
+                    resource.close();
+                } catch (Throwable cleanup) {
+                    if (cleanup != failure) failure.addSuppressed(cleanup);
+                }
+            }
         }
 
         protected List<HelpLink> buildHelpLinks() {

@@ -1,8 +1,9 @@
 {
     "argv": [
         "java",
+        "--add-opens",
+        "jdk.jshell/jdk.jshell=ALL-UNNAMED",
         "-jar",
-        "{resource_dir}/jjava-launcher.jar",
         "{resource_dir}/jjava.jar",
         "{connection_file}"
     ],
