@@ -49,7 +49,8 @@ class UnixDomainDisplayDeliveryTimeoutTest {
 
             DisplayDeliveryException e = assertThrows(DisplayDeliveryException.class, () -> delivery.deliver(request));
 
-            assertEquals(UNCERTAIN, e.kind());
+            // the cause is reported so a platform-specific failure mode is visible in CI output
+            assertEquals(UNCERTAIN, e.kind(), () -> "cause: " + e.getCause());
             assertTrue(elapsedMillis(start) < BOUND_MILLIS);
         }
     }
