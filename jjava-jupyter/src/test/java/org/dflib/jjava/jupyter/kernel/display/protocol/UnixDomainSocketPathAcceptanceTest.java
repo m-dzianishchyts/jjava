@@ -71,9 +71,16 @@ public class UnixDomainSocketPathAcceptanceTest {
         assertTrue(ok, String.join("\n", report));
     }
 
-    // one extra segment: lengthens the standard temp path but stays under the ~108-byte AF_UNIX limit
+    // Pads the directory so the socket path is exactly LENGTHENED_TARGET_BYTES, which is under the smallest AF_UNIX
+    // limit (macOS sun_path, about 104 bytes). Sizing by the platform default is not safe: a fixed segment overshot it.
+    private static final int LENGTHENED_TARGET_BYTES = 100;
+
     private static Path nestedDir(Path base) throws Exception {
-        return Files.createDirectories(base.resolve("uds-gate-length-check"));
+        int room = LENGTHENED_TARGET_BYTES - base.toString().getBytes(StandardCharsets.UTF_8).length - "/s.sock".length();
+        if (room < 2) {
+            throw new IllegalStateException("temp path leaves no room to lengthen: " + base);
+        }
+        return Files.createDirectories(base.resolve("l".repeat(room - 1)));
     }
 
     private static boolean check(List<String> report, String label, Path socket) throws Exception {
