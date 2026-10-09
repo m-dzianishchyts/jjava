@@ -18,17 +18,17 @@ public class JavaKernelEvalBuilderTest {
     private JavaKernel kernel;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         kernel = JavaKernel.builder().extensionsEnabled(false).build();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         kernel.onShutdown(false);
     }
 
     @Test
-    public void rendersManagerLineAndCellMagicsRegardlessOfBuilderOrder() {
+    void rendersManagerLineAndCellMagicsRegardlessOfBuilderOrder() {
         AtomicInteger calls = new AtomicInteger();
         kernel.getMagicsRegistry().registerLineMagic("probe", (k, args) -> {
             assertSame(kernel, k);
@@ -59,7 +59,7 @@ public class JavaKernelEvalBuilderTest {
     }
 
     @Test
-    public void preservesNullAndDisplayDataMagicResults() {
+    void preservesNullAndDisplayDataMagicResults() {
         kernel.getMagicsRegistry().registerLineMagic("nothing", (k, args) -> null);
         assertNull(kernel.evalBuilder("%nothing").renderResults().resolveMagics().eval());
 
@@ -69,7 +69,14 @@ public class JavaKernelEvalBuilderTest {
     }
 
     @Test
-    public void doesNotUseManagerRendererForExecutorResults() {
+    void textualNullResultIsPresentWhileAbsentResultIsNot() {
+        DisplayData textualNull = kernel.evalBuilder("String nothing = null;\nnothing").renderResults().eval();
+        assertEquals("null", textualNull.getData().get("text/plain"));
+        assertNull(kernel.evalBuilder("int declared = 1;").renderResults().eval());
+    }
+
+    @Test
+    void doesNotUseManagerRendererForExecutorResults() {
         kernel.getRenderer().createRegistration(String.class)
                 .register((value, context) -> fail("Executor result must not be rendered in the manager"));
 

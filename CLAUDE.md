@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Surefire in `jjava-kernel` and `jjava-distro` is configured with `--add-opens jdk.jshell/jdk.jshell=ALL-UNNAMED` — required for JShell reflection. Anything that exercises `JavaKernel`/`CodeEvaluator` directly needs the same flag.
 - Local install of the freshly built kernel into Jupyter: see `DEV-GUIDE.md` (`unzip` the kernelspec zip, then `jupyter kernelspec install ... --name=java --user`).
 
-Minimum toolchain: JDK 11 (`maven.compiler.release=11`). CI matrix builds against 11, 17, 21, 25.
+Minimum toolchain: JDK 21 (`maven.compiler.release=21`). CI matrix builds against 21 and 25 on Linux, Windows, and macOS.
 
 ## Module Layout and Dependency Graph
 

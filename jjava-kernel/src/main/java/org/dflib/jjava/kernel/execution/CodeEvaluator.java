@@ -42,14 +42,14 @@ public class CodeEvaluator implements AutoCloseable {
         });
     }
 
-    public Object eval(JShell shell, String code) {
+    public EvaluationResult eval(JShell shell, String code) {
         checkExecutorFailure();
         interrupted.set(false);
         long timeoutNanos = timeoutDuration > 0 ? timeoutUnit.toNanos(timeoutDuration) : -1;
         long started = System.nanoTime();
         SourceCodeAnalysis sca = shell.sourceCodeAnalysis();
 
-        Object lastResult = null;
+        EvaluationResult lastResult = EvaluationResult.NONE;
         SourceCodeAnalysis.CompletionInfo info = sca.analyzeCompletion(code);
 
         while (info.completeness().isComplete()) {
@@ -65,9 +65,9 @@ public class CodeEvaluator implements AutoCloseable {
         return lastResult;
     }
 
-    protected Object evalSingle(JShell shell, String code, long timeoutNanos) {
+    protected EvaluationResult evalSingle(JShell shell, String code, long timeoutNanos) {
         List<SnippetEvent> events = evaluate(shell, code, timeoutNanos);
-        Object result = null;
+        String result = null;
 
         for (SnippetEvent event : events) {
             if (event.causeSnippet() != null) {
@@ -109,7 +109,7 @@ public class CodeEvaluator implements AutoCloseable {
             }
         }
 
-        return result;
+        return new EvaluationResult(result);
     }
 
     private List<SnippetEvent> evaluate(JShell shell, String code, long timeoutNanos) {

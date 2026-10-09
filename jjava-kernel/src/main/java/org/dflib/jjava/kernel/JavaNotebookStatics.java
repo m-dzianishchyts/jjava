@@ -19,10 +19,6 @@ public class JavaNotebookStatics {
     }
 
     public static JavaKernel kernel() {
-        try {
-            return (JavaKernel) BaseKernel.notebookKernel();
-        } catch (NullPointerException e) {
-            throw new UnsupportedOperationException("JavaKernel.kernel() cannot expose the managing JVM from executor code", e);
-        }
+        return (JavaKernel) BaseKernel.notebookKernel();
     }
 }

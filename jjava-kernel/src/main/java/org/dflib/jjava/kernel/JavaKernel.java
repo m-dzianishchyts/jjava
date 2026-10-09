@@ -28,13 +28,17 @@ import org.dflib.jjava.jupyter.kernel.util.PathsHandler;
 import org.dflib.jjava.jupyter.kernel.util.StringStyler;
 import org.dflib.jjava.kernel.execution.CodeEvaluator;
 import org.dflib.jjava.kernel.execution.CompilationException;
-import org.dflib.jjava.kernel.execution.DisplayCallbackServer;
 import org.dflib.jjava.kernel.execution.EvaluationInterruptedException;
 import org.dflib.jjava.kernel.execution.ExecutorTerminationException;
+import org.dflib.jjava.jupyter.kernel.display.protocol.DisplayRequest;
+import org.dflib.jjava.jupyter.kernel.display.protocol.DisplayRequestHandler;
+import org.dflib.jjava.jupyter.kernel.display.protocol.uds.UnixDomainDisplayEndpoint;
+import org.dflib.jjava.kernel.execution.EvaluationResult;
 import org.dflib.jjava.kernel.execution.EvaluationTimeoutException;
 import org.dflib.jjava.kernel.execution.IncompleteSourceException;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -68,7 +72,7 @@ public class JavaKernel extends BaseKernel {
     private final JShell jShell;
     private final CodeEvaluator evaluator;
     private volatile boolean shuttingDown;
-    private DisplayCallbackServer displayCallbackServer;
+    private UnixDomainDisplayEndpoint displayEndpoint;
 
     protected JavaKernel(
             String name,
@@ -264,6 +268,21 @@ public class JavaKernel extends BaseKernel {
         return evaluator.eval(jShell, source);
     }
 
+    /**
+     * Maps an evaluation or magic result to its Jupyter presentation: absent evaluation text produces no output,
+     * evaluation text becomes text/plain only, and any other magic value is rendered as text.
+     */
+    static DisplayData toExecuteResult(Object value) {
+        if (value instanceof EvaluationResult result) {
+            String text = result.text();
+            return text == null ? null : new DisplayData(text);
+        }
+        if (value == null || value instanceof DisplayData) {
+            return (DisplayData) value;
+        }
+        return new DisplayData(String.valueOf(value));
+    }
+
     private static final class JavaEvalBuilder<T> implements EvalBuilder<T> {
         private final JavaKernel kernel;
         private final String source;
@@ -312,15 +331,13 @@ public class JavaKernel extends BaseKernel {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public T eval() {
             Object value = evalRaw();
             if (!renderResults) {
-                return (T) value;
+                return (T) (value instanceof EvaluationResult result ? result.text() : value);
             }
-            if (value == null) {
-                return null;
-            }
-            return (T) (value instanceof DisplayData ? value : new DisplayData(String.valueOf(value)));
+            return (T) toExecuteResult(value);
         }
 
         private Object evalRaw() {
@@ -456,11 +473,22 @@ public class JavaKernel extends BaseKernel {
                 jShell.close();
             } finally {
                 try {
-                    if (displayCallbackServer != null) displayCallbackServer.close();
+                    closeDisplayEndpoint();
                 } finally {
                     evaluator.close();
                 }
             }
+        }
+    }
+
+    private void closeDisplayEndpoint() {
+        if (displayEndpoint == null) {
+            return;
+        }
+        try {
+            displayEndpoint.close();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -484,23 +512,20 @@ public class JavaKernel extends BaseKernel {
         private Builder() {
         }
 
-        @SuppressWarnings("resource")
         @Override
         public JavaKernel build() {
-            DisplayCallbackServer displayCallbackServer;
-            try {
-                displayCallbackServer = new DisplayCallbackServer();
-            } catch (IOException e) {
-                throw new IllegalStateException("Unable to start display callback channel", e);
-            }
-
+            JavaKernel[] kernelRef = new JavaKernel[1];
+            UnixDomainDisplayEndpoint endpoint = null;
             JShell jShell = null;
             CodeEvaluator evaluator = null;
             try {
+                endpoint = openDisplayEndpoint(kernelRef);
+                afterDisplayEndpointCreated.run();
+
                 String name = buildName();
                 JupyterIO io = buildJupyterIO(buildJupyterIOEncoding());
                 evaluator = buildCodeEvaluator();
-                jShell = buildJShell(io, List.of("-Djjava.display.port=" + displayCallbackServer.getPort()));
+                jShell = buildJShell(io, List.of("-Djjava.display.socket=" + endpoint.path()));
                 MagicTranspiler magicTranspiler = buildMagicTranspiler();
 
                 JavaKernel kernel = new JavaKernel(
@@ -519,12 +544,31 @@ public class JavaKernel extends BaseKernel {
                         jShell,
                         evaluator
                 );
-                kernel.displayCallbackServer = displayCallbackServer;
-                displayCallbackServer.setKernel(kernel);
+                kernel.displayEndpoint = endpoint;
+                kernelRef[0] = kernel;
                 return kernel;
             } catch (RuntimeException | Error e) {
-                closeAfterFailure(e, jShell, displayCallbackServer, evaluator);
+                closeAfterFailure(e, jShell, endpoint, evaluator);
                 throw e;
+            }
+        }
+
+        private UnixDomainDisplayEndpoint openDisplayEndpoint(JavaKernel[] kernelRef) {
+            try {
+                DisplayRequestHandler handler = displayHandler != null
+                        ? displayHandler
+                        : request -> applyDisplay(kernelRef[0], request);
+                return new UnixDomainDisplayEndpoint(displayEndpointPath, handler);
+            } catch (IOException e) {
+                throw new IllegalStateException("Unable to start display channel", e);
+            }
+        }
+
+        private static void applyDisplay(JavaKernel kernel, DisplayRequest request) {
+            if (request.operation() == DisplayRequest.Operation.UPDATE) {
+                kernel.getIO().display.updateDisplay(request.displayId(), request.toDisplayData());
+            } else {
+                kernel.display(request.toDisplayData());
             }
         }
 
@@ -535,7 +579,7 @@ public class JavaKernel extends BaseKernel {
                 }
                 try {
                     resource.close();
-                } catch (Throwable cleanup) {
+                } catch (Exception cleanup) {
                     if (cleanup != failure) failure.addSuppressed(cleanup);
                 }
             }
