@@ -49,17 +49,20 @@ public final class UnixDomainDisplayDelivery implements DisplayDelivery {
         }
 
         ScheduledFuture<?> deadline = DEADLINES.schedule(() -> closeQuietly(channel), DEADLINE_SECONDS, TimeUnit.SECONDS);
+        // Once connected, a write may have partly reached the peer even if the call never returned (a deadline close
+        // interrupts it, and the byte count only advances on return). So UNAVAILABLE is reserved for failures before connect.
+        boolean connected = false;
         try (channel) {
             channel.connect(UnixDomainSocketAddress.of(socketPath));
+            connected = true;
             while (out.hasRemaining()) {
                 channel.write(out);
             }
             DisplayProtocol.checkResponse(readLine(channel));
         } catch (IOException e) {
-            boolean sent = out.position() > 0;
             throw new DisplayDeliveryException(
-                    sent ? UNCERTAIN : UNAVAILABLE,
-                    sent ? UNCERTAIN_MESSAGE : UNAVAILABLE_MESSAGE,
+                    connected ? UNCERTAIN : UNAVAILABLE,
+                    connected ? UNCERTAIN_MESSAGE : UNAVAILABLE_MESSAGE,
                     e);
         } finally {
             deadline.cancel(false);
