@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.ToNumberPolicy;
 import org.dflib.jjava.jupyter.kernel.display.DisplayData;
 
 import java.lang.reflect.Array;
@@ -20,7 +21,10 @@ import java.util.Set;
  */
 public final class DisplayProtocol {
 
-    static final Gson GSON = new GsonBuilder().serializeNulls().create();
+    static final Gson GSON = new GsonBuilder()
+            .serializeNulls()
+            .setObjectToNumberStrategy(ToNumberPolicy.LAZILY_PARSED_NUMBER)
+            .create();
 
     private static final String OK = "ok";
     private static final String ACTION = "action";
