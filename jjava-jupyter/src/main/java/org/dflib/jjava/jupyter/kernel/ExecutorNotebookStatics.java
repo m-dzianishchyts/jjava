@@ -18,8 +18,7 @@ public class ExecutorNotebookStatics {
     }
 
     public static void printf(String format, Object... args) {
-        // Deliberate: JShell forwards System.out to the cell output (FR-011). A logger would not reach the cell.
-        System.out.printf(format, args); // NOSONAR
+        System.out.printf(format, args);
     }
 
     public static Object eval(String source) {
@@ -40,7 +39,6 @@ public class ExecutorNotebookStatics {
         return renderPortable(o);
     }
 
-    // Presentation hints are ignored by design (FR-012); the parameter keeps the manager's signature.
     @SuppressWarnings("unused")
     public static DisplayData render(Object o, String... as) {
         return renderPortable(o);

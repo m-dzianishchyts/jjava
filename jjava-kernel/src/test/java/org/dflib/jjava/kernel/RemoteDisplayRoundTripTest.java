@@ -11,12 +11,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 /**
  * A display and an update made by user code in the executor JVM are published by the manager.
  */
-class RemoteDisplayRoundTripTest {
+public class RemoteDisplayRoundTripTest {
 
     private static final String IMPORT = "import static org.dflib.jjava.jupyter.kernel.ExecutorNotebookStatics.*;\n";
 
     @Test
-    void executorDisplayAndUpdatePublishOnManager() {
+    public void executorDisplayAndUpdatePublishOnManager() {
         JavaKernel kernel = JavaKernel.builder().extensionsEnabled(false).build();
         try {
             CapturingShellEnvironment env = CapturingShellEnvironment.attach(kernel.getIO());
