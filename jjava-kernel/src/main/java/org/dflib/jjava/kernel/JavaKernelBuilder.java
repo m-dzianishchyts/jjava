@@ -81,7 +81,7 @@ public abstract class JavaKernelBuilder<
         return JShell.builder()
                 .out(io.out)
                 .err(io.err)
-                .in(System.in)
+                .in(io.in)
                 .executionEngine(new JdiExecutionControlProvider(), Map.of())
                 .remoteVMOptions(options.toArray(new String[0]))
                 .compilerOptions(compilerOpts.toArray(new String[0]))
