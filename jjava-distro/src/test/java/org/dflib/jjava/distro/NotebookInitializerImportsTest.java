@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NotebookInitializerImportsTest {
 
     @Test
-    void startupScriptImportsOnlyExecutorHelpers() throws Exception {
+    public void startupScriptImportsOnlyExecutorHelpers() throws Exception {
         Field field = NotebookInitializer.class.getDeclaredField("STARTUP_SCRIPT");
         field.setAccessible(true);
         String script = (String) field.get(null);

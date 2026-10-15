@@ -34,6 +34,18 @@ public class KernelStartupIT extends ContainerizedKernelCase {
     }
 
     @Test
+    public void displayAfterExecutorTerminationReportsExecutorUnavailable() throws Exception {
+        KernelRun run = executeInKernel(
+                Map.of(Env.JJAVA_TIMEOUT, "3000"),
+                "Runtime.getRuntime().halt(17);",
+                "display(\"after termination\")"
+        );
+
+        run.cell(1).assertError("Executor process terminated", "Restart the kernel");
+        run.cell(2).assertError("Executor process terminated", "Restart the kernel");
+    }
+
+    @Test
     public void executorOutOfMemoryMarksSessionLost() throws Exception {
         KernelRun run = executeInKernel(
                 Map.of(Env.JJAVA_JVM_OPTS, "-Xmx128m"),

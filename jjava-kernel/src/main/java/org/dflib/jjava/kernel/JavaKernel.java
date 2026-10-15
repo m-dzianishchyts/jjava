@@ -548,6 +548,8 @@ public class JavaKernel extends BaseKernel {
                 kernelRef[0] = kernel;
                 return kernel;
             } catch (RuntimeException | Error e) {
+                // Deliberately catches Error too: an OutOfMemoryError or similar during build must still release the
+                // JShell, display endpoint, and evaluator it has already created, and then be rethrown unchanged.
                 closeAfterFailure(e, jShell, endpoint, evaluator);
                 throw e;
             }
