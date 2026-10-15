@@ -49,12 +49,27 @@ public final class UnixDomainDisplayEndpoint implements Closeable {
     public UnixDomainDisplayEndpoint(Path socketPath, DisplayRequestHandler handler) throws IOException {
         this.handler = handler;
         this.server = ServerSocketChannel.open(StandardProtocolFamily.UNIX);
-        this.server.bind(socketPath == null ? null : UnixDomainSocketAddress.of(socketPath));
-        this.path = ((UnixDomainSocketAddress) server.getLocalAddress()).getPath();
+        Path boundPath = null;
+        try {
+            this.server.bind(socketPath == null ? null : UnixDomainSocketAddress.of(socketPath));
+            boundPath = socketPath;
+            boundPath = ((UnixDomainSocketAddress) server.getLocalAddress()).getPath();
+            this.path = boundPath;
 
-        Thread acceptor = new Thread(this::acceptLoop, "jjava-display-callback");
-        acceptor.setDaemon(true);
-        acceptor.start();
+            Thread acceptor = new Thread(this::acceptLoop, "jjava-display-callback");
+            acceptor.setDaemon(true);
+            acceptor.start();
+        } catch (IOException | RuntimeException | Error e) {
+            closeQuietly(server);
+            if (boundPath != null) {
+                try {
+                    Files.deleteIfExists(boundPath);
+                } catch (IOException cleanup) {
+                    e.addSuppressed(cleanup);
+                }
+            }
+            throw e;
+        }
     }
 
     public Path path() {
