@@ -8,12 +8,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class MagicTranspilerTest {
+public class MagicTranspilerTest {
 
     private static final String EXECUTOR = ExecutorNotebookStatics.class.getName();
 
     @Test
-    void generatedCellAndLineCallsTargetExecutorHelpers() {
+    public void generatedCellAndLineCallsTargetExecutorHelpers() {
         MagicTranspiler transpiler = new MagicTranspiler();
 
         String cell = transpiler.transpileCell(new ParsedCellMagic("m", List.of(), "body"));

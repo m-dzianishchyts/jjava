@@ -21,12 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Production bounds: a single 10 s RESPONSE deadline, judged with a 5 s scheduling tolerance (15 s).
  */
-class UnixDomainDisplayDeliveryTimeoutTest {
+public class UnixDomainDisplayDeliveryTimeoutTest {
 
     private static final long BOUND_MILLIS = 15_000;
 
     @Test
-    void missingSocketFailsUnavailableWithinConnectBound() {
+    public void missingSocketFailsUnavailableWithinConnectBound() {
         Path missing = Path.of(System.getProperty("java.io.tmpdir"), "jjava-missing-" + System.nanoTime() + ".sock");
         UnixDomainDisplayDelivery delivery = new UnixDomainDisplayDelivery(missing);
         DisplayRequest request = request(new DisplayData("x"));
@@ -39,7 +39,7 @@ class UnixDomainDisplayDeliveryTimeoutTest {
     }
 
     @Test
-    void peerThatNeverReadsLargeRequestFailsUncertainWithinBound() throws Exception {
+    public void peerThatNeverReadsLargeRequestFailsUncertainWithinBound() throws Exception {
         Path socket = Files.createTempDirectory("uds-timeout").resolve("s.sock");
         try (ServerSocketChannel server = listen(socket)) {
             // Never accepts: connect completes through the listen backlog, then the large write stalls.
@@ -56,7 +56,7 @@ class UnixDomainDisplayDeliveryTimeoutTest {
     }
 
     @Test
-    void peerThatReadsButNeverRepliesFailsUncertainWithinBound() throws Exception {
+    public void peerThatReadsButNeverRepliesFailsUncertainWithinBound() throws Exception {
         Path socket = Files.createTempDirectory("uds-timeout").resolve("s.sock");
         try (ServerSocketChannel server = listen(socket)) {
             Thread peer = new Thread(() -> holdAfterRead(server));

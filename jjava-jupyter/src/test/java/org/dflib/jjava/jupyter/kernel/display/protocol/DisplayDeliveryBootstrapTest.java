@@ -13,24 +13,24 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class DisplayDeliveryBootstrapTest {
+public class DisplayDeliveryBootstrapTest {
 
     private static final DisplayRequest REQUEST = DisplayRequest.of(DisplayRequest.Operation.DISPLAY, "id", new DisplayData("x"));
 
     @Test
-    void noSocketPropertyFailsEveryDeliveryUnavailable() {
+    public void noSocketPropertyFailsEveryDeliveryUnavailable() {
         DisplayDelivery unavailable = DisplayDeliveryBootstrap.fromSocketPath(null);
         DisplayDeliveryException e = assertThrows(DisplayDeliveryException.class, () -> unavailable.deliver(REQUEST));
         assertEquals(UNAVAILABLE, e.kind());
     }
 
     @Test
-    void socketPropertySelectsUdsDelivery() {
+    public void socketPropertySelectsUdsDelivery() {
         assertInstanceOf(UnixDomainDisplayDelivery.class, DisplayDeliveryBootstrap.fromSocketPath("/tmp/x.sock"));
     }
 
     @Test
-    void installReturnsPreviousAndIsUsedForSubsequentCalls() {
+    public void installReturnsPreviousAndIsUsedForSubsequentCalls() {
         DisplayDelivery previous = DisplayDeliveryBootstrap.current();
         List<DisplayRequest> seen = new ArrayList<>();
         try {

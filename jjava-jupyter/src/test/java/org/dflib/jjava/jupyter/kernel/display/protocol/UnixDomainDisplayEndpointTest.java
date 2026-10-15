@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class UnixDomainDisplayEndpointTest {
+public class UnixDomainDisplayEndpointTest {
 
     @Test
-    void servesOneRequestLinePerConnectionInOrderAndRemovesSocketOnShutdown() throws Exception {
+    public void servesOneRequestLinePerConnectionInOrderAndRemovesSocketOnShutdown() throws Exception {
         List<String> ids = Collections.synchronizedList(new ArrayList<>());
         UnixDomainDisplayEndpoint endpoint = new UnixDomainDisplayEndpoint(r -> ids.add(r.displayId()));
         Path socket = endpoint.path();

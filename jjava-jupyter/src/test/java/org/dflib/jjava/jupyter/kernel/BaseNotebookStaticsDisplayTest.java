@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Manager-side helpers: display and update go to the running kernel directly and never through DisplayDelivery.
  */
-class BaseNotebookStaticsDisplayTest {
+public class BaseNotebookStaticsDisplayTest {
 
     private final List<DisplayRequest> delivered = new ArrayList<>();
     private BaseKernel previousKernel;
@@ -38,7 +38,7 @@ class BaseNotebookStaticsDisplayTest {
     private CapturingEnvironment env;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         previousKernel = BaseKernel.notebookKernel;
         previousDelivery = DisplayDeliveryBootstrap.install(delivered::add);
 
@@ -67,7 +67,7 @@ class BaseNotebookStaticsDisplayTest {
     }
 
     @Test
-    void updateDisplayUsesKernelWithTheTargetId() {
+    public void updateDisplayUsesKernelWithTheTargetId() {
         BaseNotebookStatics.updateDisplay("requested-id", new DisplayData("updated"));
 
         PublishUpdateDisplayData update = assertInstanceOf(
@@ -78,7 +78,7 @@ class BaseNotebookStaticsDisplayTest {
     }
 
     @Test
-    void managerWithoutKernelFailsWithNullPointerAndNeverDelivers() {
+    public void managerWithoutKernelFailsWithNullPointerAndNeverDelivers() {
         BaseKernel.notebookKernel = null;
 
         assertThrows(NullPointerException.class, () -> BaseNotebookStatics.display("text"));

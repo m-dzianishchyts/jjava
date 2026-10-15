@@ -4,7 +4,7 @@ package org.dflib.jjava.jupyter.kernel.display.protocol;
  * Runs the delivery contract against an in-memory substitute that round-trips every request and response through the
  * protocol text, exactly as a real transport would.
  */
-class InMemoryDisplayDeliveryContractTest extends DisplayDeliveryContractTest {
+public class InMemoryDisplayDeliveryContractTest extends DisplayDeliveryContractTest {
 
     @Override
     protected DisplayDelivery delivery(DisplayRequestHandler handler) {

@@ -20,14 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Contract every delivery must satisfy, shared by the transports and the in-memory substitute. Transport-specific
  * behaviour (unavailable endpoint, stalled peer) is tested in the transport's own test classes.
  */
-abstract class DisplayDeliveryContractTest {
+public abstract class DisplayDeliveryContractTest {
 
     private static final Gson GSON = new GsonBuilder().serializeNulls().create();
 
     protected abstract DisplayDelivery delivery(DisplayRequestHandler handler);
 
     @Test
-    void bundleSurvivesDelivery() {
+    public void bundleSurvivesDelivery() {
         List<DisplayRequest> received = new ArrayList<>();
         DisplayData sent = bundle();
 
@@ -42,7 +42,7 @@ abstract class DisplayDeliveryContractTest {
     }
 
     @Test
-    void updateCarriesTargetId() {
+    public void updateCarriesTargetId() {
         List<DisplayRequest> received = new ArrayList<>();
         DisplayData data = new DisplayData("updated");
         data.putTransientData("display_id", "other");
@@ -56,7 +56,7 @@ abstract class DisplayDeliveryContractTest {
     }
 
     @Test
-    void sequentialOperationsKeepOrder() {
+    public void sequentialOperationsKeepOrder() {
         List<String> ids = new ArrayList<>();
         DisplayDelivery delivery = delivery(r -> ids.add(r.displayId()));
 
@@ -70,7 +70,7 @@ abstract class DisplayDeliveryContractTest {
     }
 
     @Test
-    void handlerFailureIsRejectedWithItsMessage() {
+    public void handlerFailureIsRejectedWithItsMessage() {
         DisplayDelivery delivery = delivery(r -> {
             throw new IllegalStateException("boom");
         });

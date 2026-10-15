@@ -12,10 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class DisplayProtocolTest {
+public class DisplayProtocolTest {
 
     @Test
-    void roundTripsDisplayAndUpdate() {
+    public void roundTripsDisplayAndUpdate() {
         DisplayData data = new DisplayData("hello");
         data.putHTML("<b>hi</b>");
 
@@ -32,7 +32,7 @@ class DisplayProtocolTest {
     }
 
     @Test
-    void rejectsCyclicStructure() {
+    public void rejectsCyclicStructure() {
         List<Object> cycle = new ArrayList<>();
         cycle.add(cycle);
         DisplayData data = new DisplayData();
@@ -45,7 +45,7 @@ class DisplayProtocolTest {
     }
 
     @Test
-    void rejectsNonFiniteNumbers() {
+    public void rejectsNonFiniteNumbers() {
         for (double value : new double[]{Double.NaN, Double.POSITIVE_INFINITY}) {
             DisplayData data = new DisplayData();
             data.putData("application/json", value);
@@ -57,7 +57,7 @@ class DisplayProtocolTest {
     }
 
     @Test
-    void rejectsNonStringMapKeys() {
+    public void rejectsNonStringMapKeys() {
         Map<Object, Object> map = new LinkedHashMap<>();
         map.put(1, "bad");
         DisplayData data = new DisplayData();
@@ -70,7 +70,7 @@ class DisplayProtocolTest {
     }
 
     @Test
-    void rejectsUpdateWithoutId() {
+    public void rejectsUpdateWithoutId() {
         DisplayData data = new DisplayData("x");
         IllegalArgumentException e = assertThrows(
                 IllegalArgumentException.class,
@@ -79,7 +79,7 @@ class DisplayProtocolTest {
     }
 
     @Test
-    void rejectsUnknownActionAndMalformedJson() {
+    public void rejectsUnknownActionAndMalformedJson() {
         assertThrows(IllegalArgumentException.class,
                 () -> DisplayProtocol.decode("{\"action\":\"explode\",\"bundle\":{}}"));
         assertThrows(IllegalArgumentException.class, () -> DisplayProtocol.decode("not json"));

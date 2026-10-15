@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ExecutorNotebookStaticsRoutingTest {
+public class ExecutorNotebookStaticsRoutingTest {
 
     private final List<DisplayRequest> delivered = new ArrayList<>();
     private DisplayDelivery previousDelivery;
@@ -37,7 +37,7 @@ class ExecutorNotebookStaticsRoutingTest {
     }
 
     @Test
-    void displayDeliversThroughBootstrapWithoutReadingKernel() {
+    public void displayDeliversThroughBootstrapWithoutReadingKernel() {
         String id = ExecutorNotebookStatics.display("text");
 
         assertEquals(1, delivered.size());
@@ -46,7 +46,7 @@ class ExecutorNotebookStaticsRoutingTest {
     }
 
     @Test
-    void updateDisplayDeliversUpdateWithTargetId() {
+    public void updateDisplayDeliversUpdateWithTargetId() {
         ExecutorNotebookStatics.updateDisplay("target", "text");
 
         assertEquals(DisplayRequest.Operation.UPDATE, delivered.get(0).operation());
@@ -54,13 +54,13 @@ class ExecutorNotebookStaticsRoutingTest {
     }
 
     @Test
-    void updateDisplayWithNullIdFailsBeforeDelivering() {
+    public void updateDisplayWithNullIdFailsBeforeDelivering() {
         assertThrows(IllegalArgumentException.class, () -> ExecutorNotebookStatics.updateDisplay(null, "text"));
         assertTrue(delivered.isEmpty());
     }
 
     @Test
-    void unsupportedHelpersFailWithExistingMessages() {
+    public void unsupportedHelpersFailWithExistingMessages() {
         assertEquals(
                 "eval() cannot be called from executor code in JDI mode",
                 assertThrows(UnsupportedOperationException.class, () -> ExecutorNotebookStatics.eval("1")).getMessage());
@@ -76,7 +76,7 @@ class ExecutorNotebookStaticsRoutingTest {
     }
 
     @Test
-    void printfWritesStandardOutput() {
+    public void printfWritesStandardOutput() {
         PrintStream original = System.out;
         ByteArrayOutputStream captured = new ByteArrayOutputStream();
         System.setOut(new PrintStream(captured, true, StandardCharsets.UTF_8));

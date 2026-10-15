@@ -8,10 +8,10 @@ import java.util.Base64;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class DisplayEncodingTest {
+public class DisplayEncodingTest {
 
     @Test
-    void multilineNonAsciiAndPngSurviveRoundTripUnchanged() {
+    public void multilineNonAsciiAndPngSurviveRoundTripUnchanged() {
         String multiline = "line one\nline two\r\nend";
         String nonAscii = "héllo — 日本語 🎉";
         String png = Base64.getEncoder().encodeToString(new byte[]{(byte) 0x89, 'P', 'N', 'G', 0x0A, 0x1A, 0x0A});
@@ -29,7 +29,7 @@ class DisplayEncodingTest {
     }
 
     @Test
-    void encodedRequestNeverContainsRawLineFeed() {
+    public void encodedRequestNeverContainsRawLineFeed() {
         DisplayData data = new DisplayData("a\nb\nc");
         String line = DisplayProtocol.encode(DisplayRequest.of(DisplayRequest.Operation.DISPLAY, "id", data));
 

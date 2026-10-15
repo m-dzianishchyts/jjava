@@ -17,14 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Evaluation-result boundary (T057): the evaluator and its result model must not depend on Jupyter display,
- * message, or channel types, and eval returns EvaluationResult.
- */
-class OutputBoundaryDependencyTest {
+public class OutputBoundaryDependencyTest {
 
     @Test
-    void evaluatorAndResultModelDoNotDependOnJupyterPresentation() {
+    public void evaluatorAndResultModelDoNotDependOnJupyterPresentation() {
         List<String> violations = new ArrayList<>();
         List<String[]> edges = edges(Path.of("target", "classes"));
         assertFalse(edges.isEmpty(), "jdeps produced no edges; the check would pass vacuously");
@@ -43,7 +39,7 @@ class OutputBoundaryDependencyTest {
     }
 
     @Test
-    void evalReturnsEvaluationResult() throws Exception {
+    public void evalReturnsEvaluationResult() throws Exception {
         assertEquals(EvaluationResult.class,
                 CodeEvaluator.class.getMethod("eval", JShell.class, String.class).getReturnType());
     }

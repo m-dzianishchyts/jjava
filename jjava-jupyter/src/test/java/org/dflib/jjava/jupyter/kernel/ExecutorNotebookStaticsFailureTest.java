@@ -1,10 +1,8 @@
 package org.dflib.jjava.jupyter.kernel;
 
-import org.dflib.jjava.jupyter.kernel.display.DisplayData;
 import org.dflib.jjava.jupyter.kernel.display.protocol.DisplayDelivery;
 import org.dflib.jjava.jupyter.kernel.display.protocol.DisplayDeliveryBootstrap;
 import org.dflib.jjava.jupyter.kernel.display.protocol.DisplayDeliveryException;
-import org.dflib.jjava.jupyter.kernel.display.protocol.DisplayRequest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ExecutorNotebookStaticsFailureTest {
+public class ExecutorNotebookStaticsFailureTest {
 
     private DisplayDelivery previousDelivery;
     private AtomicInteger attempts;
@@ -34,7 +32,7 @@ class ExecutorNotebookStaticsFailureTest {
     }
 
     @Test
-    void unavailableMapsToRemoteChannelMessage() {
+    public void unavailableMapsToRemoteChannelMessage() {
         failingWith(DisplayDeliveryException.Kind.UNAVAILABLE, "Remote display channel is not available");
 
         RuntimeException e = assertThrows(RuntimeException.class, () -> ExecutorNotebookStatics.display("text"));
@@ -44,7 +42,7 @@ class ExecutorNotebookStaticsFailureTest {
     }
 
     @Test
-    void rejectedKeepsDisplayCallbackPrefix() {
+    public void rejectedKeepsDisplayCallbackPrefix() {
         failingWith(DisplayDeliveryException.Kind.REJECTED, "Display callback failed: boom");
 
         RuntimeException e = assertThrows(RuntimeException.class, () -> ExecutorNotebookStatics.display("text"));
@@ -54,7 +52,7 @@ class ExecutorNotebookStaticsFailureTest {
     }
 
     @Test
-    void uncertainMapsToFailedToSendPrefixAndIsNotRetried() {
+    public void uncertainMapsToFailedToSendPrefixAndIsNotRetried() {
         failingWith(DisplayDeliveryException.Kind.UNCERTAIN, "outcome unknown");
 
         RuntimeException e = assertThrows(RuntimeException.class, () -> ExecutorNotebookStatics.updateDisplay("id", "text"));

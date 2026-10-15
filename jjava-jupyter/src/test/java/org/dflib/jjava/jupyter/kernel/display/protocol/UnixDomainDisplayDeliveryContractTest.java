@@ -9,7 +9,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 
-class UnixDomainDisplayDeliveryContractTest extends DisplayDeliveryContractTest {
+public class UnixDomainDisplayDeliveryContractTest extends DisplayDeliveryContractTest {
 
     private final List<UnixDomainDisplayEndpoint> endpoints = new ArrayList<>();
 

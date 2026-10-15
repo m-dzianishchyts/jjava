@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Characterizes executor render behaviour (Gate 1 for the routing change). Rendering never publishes or delivers, so
  * the recording delivery must stay empty throughout.
  */
-class ExecutorNotebookStaticsRenderCharacterizationTest {
+public class ExecutorNotebookStaticsRenderCharacterizationTest {
 
     private final List<DisplayRequest> delivered = new ArrayList<>();
     private DisplayDelivery previousDelivery;
@@ -41,37 +41,37 @@ class ExecutorNotebookStaticsRenderCharacterizationTest {
     }
 
     @Test
-    void renderNullThrowsNullPointerException() {
+    public void renderNullThrowsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ExecutorNotebookStatics.render((Object) null));
     }
 
     @Test
-    void renderDisplayDataReturnsSameObject() {
+    public void renderDisplayDataReturnsSameObject() {
         DisplayData data = new DisplayData("x");
         assertSame(data, ExecutorNotebookStatics.render((Object) data));
     }
 
     @Test
-    void renderScalarsAsTextPlainOnly() {
+    public void renderScalarsAsTextPlainOnly() {
         assertEquals(Map.of("text/plain", "hi"), ExecutorNotebookStatics.render("hi").getData());
         assertEquals(Map.of("text/plain", "42"), ExecutorNotebookStatics.render(42).getData());
         assertEquals(Map.of("text/plain", "true"), ExecutorNotebookStatics.render(true).getData());
     }
 
     @Test
-    void renderCharacterThrowsIllegalArgumentException() {
+    public void renderCharacterThrowsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> ExecutorNotebookStatics.render('c'));
     }
 
     @Test
-    void renderIgnoresPresentationHints() {
+    public void renderIgnoresPresentationHints() {
         assertEquals(
                 ExecutorNotebookStatics.render("x").getData(),
                 ExecutorNotebookStatics.render("x", "text/html").getData());
     }
 
     @Test
-    void renderNeverDelivers() {
+    public void renderNeverDelivers() {
         ExecutorNotebookStatics.render("x");
         ExecutorNotebookStatics.render("x", "text/html");
         assertTrue(delivered.isEmpty());

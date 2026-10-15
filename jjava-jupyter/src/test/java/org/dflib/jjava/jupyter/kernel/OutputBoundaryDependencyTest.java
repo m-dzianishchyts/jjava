@@ -13,16 +13,13 @@ import java.util.spi.ToolProvider;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * Dependency boundaries of the jupyter module (T056). Uses jdeps class-level output over target/classes.
- */
-class OutputBoundaryDependencyTest {
+public class OutputBoundaryDependencyTest {
 
     private static final String PROTOCOL = "org.dflib.jjava.jupyter.kernel.display.protocol.";
     private static final String BASE_STATICS = "org.dflib.jjava.jupyter.kernel.BaseNotebookStatics";
 
     @Test
-    void protocolClassesOutsideTransportPackagesDoNotUseSocketsOrJupyterChannels() {
+    public void protocolClassesOutsideTransportPackagesDoNotUseSocketsOrJupyterChannels() {
         List<String> violations = new ArrayList<>();
         List<String[]> edges = edges(Path.of("target", "classes"));
         assertFalse(edges.isEmpty(), "jdeps produced no edges; the check would pass vacuously");
@@ -42,7 +39,7 @@ class OutputBoundaryDependencyTest {
     }
 
     @Test
-    void managerHelperNeverDeliversThroughTheExecutorBoundary() {
+    public void managerHelperNeverDeliversThroughTheExecutorBoundary() {
         List<String> violations = new ArrayList<>();
         for (String[] edge : edges(Path.of("target", "classes"))) {
             String from = edge[0];
